@@ -5,6 +5,8 @@ import (
 )
 
 type room struct {
+	history [][]byte
+
 	chatter chan []byte
 	join    chan *player
 	leave   chan *player
@@ -13,6 +15,7 @@ type room struct {
 
 func newRoom() *room {
 	return &room{
+		history: make([][]byte, 0),
 		chatter: make(chan []byte),
 		join:    make(chan *player),
 		leave:   make(chan *player),
@@ -24,7 +27,17 @@ func (r *room) run() {
 	for {
 		select {
 		case player := <-r.join:
-			r.players[player] = true
+			go func() {
+				for _, message := range r.history {
+					select {
+					case player.send <- message:
+					default:
+						close(player.send)
+						return
+					}
+				}
+				r.players[player] = true
+			}()
 
 		case player := <-r.leave:
 			if _, ok := r.players[player]; ok {
@@ -33,6 +46,7 @@ func (r *room) run() {
 			}
 
 		case message := <-r.chatter:
+			r.history = append(r.history, message)
 			fmt.Printf("chatter <%s>\n", string(message))
 			for player := range r.players {
 				fmt.Printf(" -->> %p\n", player)
