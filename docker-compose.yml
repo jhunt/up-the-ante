@@ -1,0 +1,15 @@
+version: '3'
+services:
+  redis:
+    image: redis
+    ports: ['8080:8080'] # for web
+
+  web:
+    image: filefrog/uta-nginx
+    network_mode: 'service:redis' # can't co-exist with ports:[]
+    volumes:
+      - $PWD/htdocs:/htdocs
+
+  api:
+    image: filefrog/uta-tabled
+    network_mode: 'service:redis' # can't co-exist with ports:[]

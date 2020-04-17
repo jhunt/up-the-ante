@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Up the Ante -- dev</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div id="app">
+  <test-interface :ws="ws"></test-interface>
+</div>
+
+<script type="text/javascript">
+function name() {
+  let adj = [
+    'amusing',
+    'bright',
+    'clever',
+    'energetic',
+    'fabulous',
+    'handsome',
+    'nice',
+    'outstanding',
+    'perfect',
+    'spectacular',
+    'splendid',
+    'stellar',
+    'super',
+    'wonderful'
+  ];
+
+  let noun = [
+    'bluejay',
+    'cardinal',
+    'chicakdee',
+    'crow',
+    'eagle',
+    'falcon',
+    'finch',
+    'grackle',
+    'hawk',
+    'parakeet',
+    'robin',
+    'sparrow'
+  ];
+
+  return adj[parseInt(Math.random() * adj.length)] + ' ' +
+        noun[parseInt(Math.random() * noun.length)];
+}
+
+Vue.component('test-interface', {
+  props: ['ws'],
+  data() {
+    return {
+      ident:   name(),
+      command: '',
+      events:  [],
+    };
+  },
+  mounted() {
+    this.ws.onmessage = (m) => {
+      this.events.push(JSON.parse(m.data));
+    };
+  },
+  methods: {
+    send() {
+      event.preventDefault();
+      this.ws.send(
+        JSON.stringify({
+          ua:  this.ident,
+          ts:  new Date().toISOString(),
+          msg: this.command
+        })
+      );
+      this.command = '';
+    }
+  },
+  template: `
+<div class="test-interface">
+  <h2>Hello, {{ ident }}</h2>
+  <form @submit="send()">
+    <label>Message</label>
+    <input type="text" placeholder="send a command..." v-model="command">
+
+    <label v-if="events.length > 0">Event Log:</label>
+    <ul>
+  <li v-for="m in events"><code>{{ m.ts }}</code><p>{{ m.msg }}</p><span>{{ m.ua }}</span></li>
+    </ul>
+  </form>
+</div>
+`});
+
+
+let Game = undefined;
+fetch('/v1/create', {method: 'POST'})
+  .then(r => r.json())
+  .then(data => {
+    Game = new WebSocket('ws://'+document.location.host+'/v1/join/'+data.pin);
+
+    new Vue({
+      el: '#app',
+      data: {
+        ws: Game
+      }
+    });
+  });
+
+let send = obj => {
+  if (typeof(obj) === "string") {
+    obj = {msg: obj};
+  }
+  Game.send(JSON.stringify(Object.assign({}, obj, {ua: navigator.userAgent, ts: new Date().toISOString()})));
+};
+let move = (x,y) => {
+  send({op: 'move', x:x, y:y});
+};
+
+</script>
+</body>
+</html>
