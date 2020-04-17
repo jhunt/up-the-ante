@@ -62,7 +62,6 @@ Vue.component('test-interface', {
   },
   methods: {
     join(pin) {
-      console.log('joining [%s]...', pin);
       new Promise(function (resolve, reject) {
         let sock = new WebSocket('ws://'+document.location.host+'/v1/join/'+pin);
         sock.onopen = function () { resolve(sock); }
@@ -122,8 +121,10 @@ Vue.component('test-interface', {
     </div>
   </template>
   <template v-else>
+    <room></room>
+  <!--
+    <header><p>Your PIN for this room is <span class="pin">{{ pin }}</span></p></header>
     <h2>Hello, {{ ident }}</h2>
-    <p>Your PIN for this room is <span class="pin">{{ pin }}</span></p>
     <form @submit="send()">
       <label>Message</label>
       <input type="text" placeholder="send a command..." v-model="command">
@@ -133,9 +134,80 @@ Vue.component('test-interface', {
     <li v-for="m in events"><code>{{ m.ts }}</code><p>{{ m.msg }}</p><span>{{ m.ua }}</span></li>
       </ul>
     </form>
+    -->
   </template>
 </div>
 `});
+
+Vue.component('room', {
+  methods: {
+    dragging_over() {
+      event.preventDefault();
+    },
+    dropped_on() {
+      event.preventDefault();
+      event.stopPropagation();
+
+      let board = event.target.closest('#board');
+      let rect = board.getBoundingClientRect();
+      let dxy = JSON.parse(event.dataTransfer.getData('dxy'));
+
+      let drop = {
+        x: (event.clientX - dxy[0]) * 100.0 / rect.width,
+        y: (event.clientY - dxy[1]) * 100.0 / rect.height
+      };
+
+      let card = document.querySelector('[data-dragged=yes]');
+      card.removeAttribute('data-dragged');
+      card.style.left = drop.x+"%";
+      card.style.top  = drop.y+"%";
+      board.appendChild(card);
+    }
+  },
+  template: `
+<div class="room">
+  <div id="overview">
+  </div>
+
+  <div id="board" @dragover="dragging_over()" @drop="dropped_on()">
+  </div>
+
+  <div id="hand">
+    <card id="10E/10E-b74648fc-587c-4d20-9432-58465bd7dca9"></card>
+    <card id="10E/10E-b74648fc-587c-4d20-9432-58465bd7dca9"></card>
+    <card id="10E/10E-b74648fc-587c-4d20-9432-58465bd7dca9"></card>
+    <card id="10E/10E-b74648fc-587c-4d20-9432-58465bd7dca9"></card>
+  </div>
+</div>
+`
+});
+
+
+  // ZK3FH
+Vue.component('card', {
+  props: ['id'],
+  data() {
+    return {
+      _: {}
+    };
+  },
+  methods: {
+    started_dragging() {
+      let card = event.target.closest('.card');
+      card.setAttribute('data-dragged', 'yes');
+
+      var rect = card.getBoundingClientRect();
+      let dx = event.x - rect.left - document.body.scrollLeft;
+      let dy = event.y - rect.top  - document.body.scrollTop;
+      event.dataTransfer.setData('dxy', JSON.stringify([dx,dy]));
+    }
+  },
+  template: `
+<span class="card" @dragstart="started_dragging()">
+  <img :src="'//vault-of-cardboard.s3.amazonaws.com/cards/' + id + '.jpg'">
+</span>
+`
+});
 
 
 new Vue({

@@ -5,10 +5,6 @@ body {
 }
 .test-interface {
   background-color: #fff;
-  border: 2px solid #aaa;
-  border-width: 0 2px;
-  max-width: 720px;
-  margin: 0 auto;
   padding: 2em;
   overflow: hidden;
   box-sizing: border-box;
@@ -112,4 +108,37 @@ button {
 }
 .choice > div:nth-child(2) {
   display: flex;
+}
+
+
+header {
+  position: absolute;
+background-color: #000;
+color: #fff;
+left: 0px;
+top: 0px;
+margin: 0;
+width: 100%;
+z-index: 1000;
+}
+.room {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+}
+.room .card {
+  display: inline-block;
+  overflow: hidden;
+}
+.room .card img {
+  max-width: 10vw;
+}
+.room #board {
+  min-height: 90vh;
+}
+.room #board .card {
+  position: absolute;
 }
