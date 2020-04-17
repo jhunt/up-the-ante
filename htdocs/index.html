@@ -59,7 +59,9 @@ Vue.component('test-interface', {
   },
   mounted() {
     this.ws.onmessage = (m) => {
-      this.events.push(JSON.parse(m.data));
+      m.data.split(/\n/).forEach(l => {
+        this.events.push(JSON.parse(l));
+      });
     };
   },
   methods: {
