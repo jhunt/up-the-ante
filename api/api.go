@@ -3,11 +3,17 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"time"
+	"math/rand"
 
 	"github.com/go-redis/redis/v7"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 )
+
+func init() {
+	rand.Seed(time.Now().Unix())
+}
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -29,13 +35,21 @@ func New(addr string) API {
 	}
 }
 
-func (a API) RandomRoomPin() string {
-	return "R-A-N-D-O-M"
+func (a API) RandomRoomPin(length int) string {
+	alpha := "ABCDEFGHJKLMNPQRTUVWXYZ2346789"
+
+	pin := ""
+
+	for i := 0; i < length; i++ {
+		pin = fmt.Sprintf("%s%c", pin, alpha[rand.Int() % len(alpha)])
+	}
+
+	return pin
 }
 
 func (a API) CreateRoom(pin string) error {
 	if _, exists := a.rooms[pin]; exists {
-		return nil
+		return fmt.Errorf("room already exists with that pin?!?")
 	}
 	a.rooms[pin] = newRoom()
 	go a.rooms[pin].run()
@@ -51,7 +65,7 @@ func (a API) Listen(bind string) error {
 	router.PathPrefix("/ui/").Handler(http.StripPrefix("/ui/", http.FileServer(http.Dir("htdocs"))))
 
 	router.HandleFunc("/v1/create", func(w http.ResponseWriter, r *http.Request) {
-		pin := a.RandomRoomPin()
+		pin := a.RandomRoomPin(5)
 		err := a.CreateRoom(pin)
 		if err != nil {
 			errJSON(w, err)

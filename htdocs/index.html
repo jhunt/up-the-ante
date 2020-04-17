@@ -8,7 +8,7 @@
 </head>
 <body>
 <div id="app">
-  <test-interface :ident="ident" :ws="ws"></test-interface>
+  <test-interface></test-interface>
 </div>
 
 <script type="text/javascript">
@@ -50,21 +50,49 @@ function name() {
 }
 
 Vue.component('test-interface', {
-  props: ['ws', 'ident'],
   data() {
     return {
-      command: '',
-      events:  [],
-    };
-  },
-  created() {
-    this.ws.onmessage = (m) => {
-      m.data.split(/\n/).forEach(l => {
-        this.events.push(JSON.parse(l));
-      });
+      ws:       undefined,
+      ident:    undefined,
+      pin:      undefined,
+      join_pin: '',
+      command:  '',
+      events:   [],
     };
   },
   methods: {
+    join(pin) {
+      console.log('joining [%s]...', pin);
+      new Promise(function (resolve, reject) {
+        let sock = new WebSocket('ws://'+document.location.host+'/v1/join/'+pin);
+        sock.onopen = function () { resolve(sock); }
+        sock.onerror = function (err) { reject(err); }
+      }).then(ws => {
+        this.ident = name();
+        this.ws = ws;
+        this.pin = pin;
+
+        this.ws.onmessage = (m) => {
+          m.data.split(/\n/).forEach(l => {
+            this.events.push(JSON.parse(l));
+          });
+        };
+
+        ws.send(
+          JSON.stringify({
+            ua:  this.ident,
+            ts:  new Date().toISOString(),
+            msg: '*'+this.ident+'* has joined the room.'
+          })
+        );
+      });
+    },
+
+    start() {
+      fetch('/v1/create', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => this.join(data.pin));
+    },
     send() {
       event.preventDefault();
       this.ws.send(
@@ -79,47 +107,42 @@ Vue.component('test-interface', {
   },
   template: `
 <div class="test-interface">
-  <h2>Hello, {{ ident }}</h2>
-  <form @submit="send()">
-    <label>Message</label>
-    <input type="text" placeholder="send a command..." v-model="command">
+  <template v-if="typeof(pin) === 'undefined'">
+    <h2>Welcome!</h2>
+    <p>This is some helpful text!</p>
 
-    <label v-if="events.length > 0">Event Log:</label>
-    <ul>
-  <li v-for="m in events"><code>{{ m.ts }}</code><p>{{ m.msg }}</p><span>{{ m.ua }}</span></li>
-    </ul>
-  </form>
+    <div class="choice">
+      <div>
+        <button @click="start()">Start Room</button>
+      </div>
+      <div>
+        <input type="text" v-model="join_pin" placeholder="P I N  C O D E">
+        <button @click="join(join_pin)">Join</button>
+      </div>
+    </div>
+  </template>
+  <template v-else>
+    <h2>Hello, {{ ident }}</h2>
+    <p>Your PIN for this room is <span class="pin">{{ pin }}</span></p>
+    <form @submit="send()">
+      <label>Message</label>
+      <input type="text" placeholder="send a command..." v-model="command">
+
+      <label v-if="events.length > 0">Event Log:</label>
+      <ul>
+    <li v-for="m in events"><code>{{ m.ts }}</code><p>{{ m.msg }}</p><span>{{ m.ua }}</span></li>
+      </ul>
+    </form>
+  </template>
 </div>
 `});
 
 
-fetch('/v1/create', {method: 'POST'})
-  .then(r => r.json())
-  .then(data => {
-    new Promise(function (resolve, reject) {
-      let sock = new WebSocket('ws://'+document.location.host+'/v1/join/'+data.pin);
-      sock.onopen = function () { resolve(sock); }
-      sock.onerror = function (err) { reject(err); }
-    }).then(ws => {
-      let ident = name();
-
-      new Vue({
-        el: '#app',
-        data: {
-          ident: ident,
-          ws:    ws
-        }
-      });
-
-      ws.send(
-        JSON.stringify({
-          ua:  ident,
-          ts:  new Date().toISOString(),
-          msg: '*'+ident+'* has joined the room.'
-        })
-      );
-    });
-  });
+new Vue({
+  el: '#app',
+  data: {
+  }
+});
 
 </script>
 </body>

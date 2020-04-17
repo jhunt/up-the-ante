@@ -69,3 +69,47 @@ ul li span {
   font-size: 8pt;
   text-align: right;
 }
+
+p {
+  font-family: sans-serif;
+  font-size: 11pt;
+}
+
+span.pin {
+  font-family: monospace;
+  font-size: 150%;
+  letter-spacing: 0.4em;
+  padding: 0.3em;
+  display: inline-block;
+  background-color: #ddd;
+  border-radius: 0.2em;
+}
+
+button {
+  font-size: 16pt;
+  border: none;
+  border-radius: 0.3em;
+  background-color: #0067ac;
+  color: #fff;
+  padding: 0.5em 1em;
+  font-weight: 500;
+  box-shadow: 0 0 8px #808080;
+  cursor: pointer;
+}
+
+.choice {
+  display: flex;
+  flex-direction: row;
+  align-items: end;
+}
+
+.choice > div {
+  width: 50%;
+}
+
+.choice input {
+  margin: 0 0.5em 0 0;
+}
+.choice > div:nth-child(2) {
+  display: flex;
+}
