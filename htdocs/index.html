@@ -180,8 +180,8 @@ Vue.component('room', {
       let dxy = JSON.parse(event.dataTransfer.getData('dxy'));
 
       let drop = {
-        x: (event.clientX - dxy[0]) * 100.0 / rect.width,
-        y: (event.clientY - dxy[1]) * 100.0 / rect.height
+        x: ((event.clientX - dxy[0]) / rect.width) * 100,
+        y: ((event.clientY - dxy[1]) / rect.height) * 90
       };
 
       let card = document.querySelector('[data-dragged=yes]');
