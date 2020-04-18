@@ -1,6 +1,5 @@
 **
 !/api
 !/cmd
-!/go.cmd
+!/go.mod
 !/go.sum
-!/vendor
