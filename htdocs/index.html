@@ -121,7 +121,8 @@ Vue.component('test-interface', {
     </div>
   </template>
   <template v-else>
-    <room></room>
+    <header><p>Your PIN for this room is: <span class="pin">{{ pin }}</span></p></header>
+    <room :ws="ws"></room>
   <!--
     <header><p>Your PIN for this room is <span class="pin">{{ pin }}</span></p></header>
     <h2>Hello, {{ ident }}</h2>
@@ -140,6 +141,32 @@ Vue.component('test-interface', {
 `});
 
 Vue.component('room', {
+  props: ["ws"],
+  data() {
+    return {hand: [
+      "10E/10E-b74648fc-587c-4d20-9432-58465bd7dca9",
+      "10E/10E-b74648fc-587c-4d20-9432-58465bd7dca9:1",
+      "10E/10E-b74648fc-587c-4d20-9432-58465bd7dca9:2",
+      "10E/10E-b74648fc-587c-4d20-9432-58465bd7dca9:3"
+    ], board: {}
+  };
+  },
+  created() {
+    this.ws.onmessage=(m) => {
+      m.data.split(/\n/).forEach(l => {
+        let op = JSON.parse(l);
+        if (op.x && op.y) {
+          Vue.set(this.board, op.id, op);
+          for (var i = 0; i < this.hand.length; i++) {
+            if (this.hand[i] == op.id) {
+              this.hand.splice(i,1);
+              break;
+            }
+          }
+        }
+      });
+    };
+  },
   methods: {
     dragging_over() {
       event.preventDefault();
@@ -159,9 +186,16 @@ Vue.component('room', {
 
       let card = document.querySelector('[data-dragged=yes]');
       card.removeAttribute('data-dragged');
-      card.style.left = drop.x+"%";
-      card.style.top  = drop.y+"%";
-      board.appendChild(card);
+      //card.style.left = drop.x+"%";
+      //card.style.top  = drop.y+"%";
+      //board.appendChild(card);
+      this.ws.send(
+        JSON.stringify({
+          x: drop.x,
+          y: drop.y,
+          id: card.getAttribute('id')
+        }),
+      )
     }
   },
   template: `
@@ -170,13 +204,16 @@ Vue.component('room', {
   </div>
 
   <div id="board" @dragover="dragging_over()" @drop="dropped_on()">
+    <card v-for="card in board"
+          :id="card.id"
+          :x="card.x"
+          :y="card.y"
+          :key="card.id"
+    ></card>
   </div>
 
   <div id="hand">
-    <card id="10E/10E-b74648fc-587c-4d20-9432-58465bd7dca9"></card>
-    <card id="10E/10E-b74648fc-587c-4d20-9432-58465bd7dca9"></card>
-    <card id="10E/10E-b74648fc-587c-4d20-9432-58465bd7dca9"></card>
-    <card id="10E/10E-b74648fc-587c-4d20-9432-58465bd7dca9"></card>
+    <card v-for="card in hand" :id="card"></card>
   </div>
 </div>
 `
@@ -185,13 +222,19 @@ Vue.component('room', {
 
   // ZK3FH
 Vue.component('card', {
-  props: ['id'],
+  props: ['id', 'x', 'y'],
   data() {
     return {
       _: {}
     };
   },
   methods: {
+    url(id) {
+      return id.replace(/:.*/,'');
+    },
+    position() {
+      return "left:"+this.x+"%;top:"+this.y+"%;";
+    },
     started_dragging() {
       let card = event.target.closest('.card');
       card.setAttribute('data-dragged', 'yes');
@@ -203,8 +246,8 @@ Vue.component('card', {
     }
   },
   template: `
-<span class="card" @dragstart="started_dragging()">
-  <img :src="'//vault-of-cardboard.s3.amazonaws.com/cards/' + id + '.jpg'">
+<span class="card" :id="id" :style="position()" @dragstart="started_dragging()">
+  <img :src="'//vault-of-cardboard.s3.amazonaws.com/cards/' + url(id) + '.jpg'">
 </span>
 `
 });
