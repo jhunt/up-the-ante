@@ -140,9 +140,19 @@ z-index: 1000;
   max-width: 10vw;
   display: block;
 }
-.room #board {
-  min-height: 90vh;
+.room #arena {
+  height: 100vh;
+  width: 100vw;
 }
-.room #board .card {
+.room .board {
+  height: 100%;
+  width: 100%;
   position: absolute;
+}
+.room .board .card {
+  position: absolute;
+}
+
+.room .their.board {
+  transform: rotate(180deg);
 }

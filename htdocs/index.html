@@ -143,15 +143,45 @@ Vue.component('test-interface', {
 Vue.component('room', {
   props: ["ws"],
   data() {
-    return {hand: [
-      "uta/bicycle/52/blueback.png",
-      "uta/bicycle/52/spades-x.png",
-      "uta/bicycle/52/spades-j.png",
-      "uta/bicycle/52/spades-q.png",
-      "uta/bicycle/52/spades-k.png",
-      "uta/bicycle/52/spades-a.png",
-    ], board: {}
-  };
+    let deck = [];
+    ['diamonds', 'hearts', 'spades', 'club'].forEach(suit => {
+      "23456789xjqka".split('').forEach(num => {
+        deck.push('uta/bicycle/52/'+suit+'-'+num+'.png');
+      });
+    });
+
+    let shuffle = (cards) => {
+      /* Fisher-Yates shuffle */
+      for (let i = cards.length - 1; i > 0; i--) {
+        let j = Math.floor(Math.random() * (i+1));
+        let tmp = cards[i];
+        cards[i] = cards[j];
+        cards[j] = tmp;
+      }
+      return cards;
+    };
+    deck = shuffle(deck);
+
+    let played = deck.slice(8, 8+5);
+    return {
+      hand: deck.slice(0,7),
+      board: {},
+      opponent: [
+        { id: played[0], x: 14, y: 53 },
+        { id: played[1], x: 17, y: 47 },
+        { id: played[2], x: 24, y: 53 },
+        { id: played[3], x: 27, y: 47 },
+        { id: played[4], x: 34, y: 53 }
+      ],
+      tableau: deck.slice(8+5, 52-8+5).map((_, i) => {
+        return {
+          id: 'uta/bicycle/52/blueback.png:'+i,
+          x:  Math.random() * 50 + 25,
+          y:  Math.random() * 50 + 25,
+          r:  Math.random() * 180
+        }
+      }),
+    };
   },
   created() {
     this.ws.onmessage=(m) => {
@@ -177,7 +207,7 @@ Vue.component('room', {
       event.preventDefault();
       event.stopPropagation();
 
-      let board = event.target.closest('#board');
+      let board = event.target.closest('.our.board');
       let rect = board.getBoundingClientRect();
       let dxy = JSON.parse(event.dataTransfer.getData('dxy'));
 
@@ -205,17 +235,35 @@ Vue.component('room', {
   <div id="overview">
   </div>
 
-  <div id="board" @dragover="dragging_over()" @drop="dropped_on()">
-    <card v-for="card in board"
-          :id="card.id"
-          :x="card.x"
-          :y="card.y"
-          :key="card.id"
-    ></card>
+  <div id="arena">
+
+   <div class="their board">
+      <card v-for="card in tableau"
+           :id="card.id"
+           :x="card.x"
+           :y="card.y"
+           :r="card.r"
+            :key="card.id"></card>
+
+      <card v-for="card in opponent"
+           :id="card.id"
+           :x="card.x"
+           :y="card.y"
+            :key="card.id"></card>
+   </div>
+
+   <div class="our board" @dragover="dragging_over()" @drop="dropped_on()">
+      <card v-for="card in board"
+           :id="card.id"
+           :x="card.x"
+           :y="card.y"
+            :key="card.id"
+      ></card>
+    </div>
   </div>
 
   <div id="hand">
-    <card v-for="card in hand" :id="card"></card>
+    <card v-for="card in hand" :id="card" :key="card"></card>
   </div>
 </div>
 `
@@ -224,7 +272,7 @@ Vue.component('room', {
 
   // ZK3FH
 Vue.component('card', {
-  props: ['id', 'x', 'y'],
+  props: ['id', 'x', 'y', 'r'],
   data() {
     return {
       _: {}
@@ -235,7 +283,7 @@ Vue.component('card', {
       return id.replace(/:.*/,'');
     },
     position() {
-      return "left:"+this.x+"%;top:"+this.y+"%;";
+      return "left:"+this.x+"%;top:"+this.y+"%;transform:rotate("+this.r+"deg);";
     },
     started_dragging() {
       let card = event.target.closest('.card');
