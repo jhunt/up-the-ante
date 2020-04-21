@@ -131,9 +131,14 @@ z-index: 1000;
 .room .card {
   display: inline-block;
   overflow: hidden;
+
+  border: 1px solid #999;
+  border-radius: 8px;
+  margin: 2px;
 }
 .room .card img {
   max-width: 10vw;
+  display: block;
 }
 .room #board {
   min-height: 90vh;

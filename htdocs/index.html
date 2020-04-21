@@ -144,10 +144,12 @@ Vue.component('room', {
   props: ["ws"],
   data() {
     return {hand: [
-      "10E/10E-b74648fc-587c-4d20-9432-58465bd7dca9",
-      "10E/10E-b74648fc-587c-4d20-9432-58465bd7dca9:1",
-      "10E/10E-b74648fc-587c-4d20-9432-58465bd7dca9:2",
-      "10E/10E-b74648fc-587c-4d20-9432-58465bd7dca9:3"
+      "uta/bicycle/52/blueback.png",
+      "uta/bicycle/52/spades-x.png",
+      "uta/bicycle/52/spades-j.png",
+      "uta/bicycle/52/spades-q.png",
+      "uta/bicycle/52/spades-k.png",
+      "uta/bicycle/52/spades-a.png",
     ], board: {}
   };
   },
@@ -247,7 +249,7 @@ Vue.component('card', {
   },
   template: `
 <span class="card" :id="id" :style="position()" @dragstart="started_dragging()">
-  <img :src="'//vault-of-cardboard.s3.amazonaws.com/cards/' + url(id) + '.jpg'">
+  <img :src="'//vault-of-cardboard.s3.amazonaws.com/' + url(id)">
 </span>
 `
 });
