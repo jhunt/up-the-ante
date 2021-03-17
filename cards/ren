@@ -1,0 +1,17 @@
+mv g2481.png hearts-8.png
+mv g2498.png spades-8.png
+mv g2515.png diamonds-8.png
+mv g2533.png spades-9.png
+mv g2551.png diamonds-9.png
+mv g2575.png diamonds-10.png
+mv g2598.png spades-10.png
+mv g2627.png hearts-10.png
+mv g2649.png hearts-j.png
+mv g2666.png spades-j.png
+mv g2682.png diamonds-j.png
+mv g2697.png hearts-q.png
+mv g2712.png spades-q.png
+mv g2727.png diamonds-q.png
+mv g2742.png hearts-k.png
+mv g2757.png spades-k.png
+mv g2772.png diamonds-k.png
